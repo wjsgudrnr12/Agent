@@ -21,7 +21,7 @@ class CustomdbModule2():
         self.name = name
         self.faq_db = []
 
-    def load(self, file):
+    def load(self, file, collection=None):
         with open(file.path, 'r', encoding='utf-8') as fp:
             cr = csv.reader(fp)
             next(cr)

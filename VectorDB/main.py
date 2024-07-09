@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from models import *
 from modulemanager import classregistry, manager
@@ -11,8 +11,8 @@ import VectorDB.milvusdbmodule.milvusdbmodule as milvusdbmodule
 app = FastAPI()
 
 @app.post("/{vectordbname}/load")
-async def load(vectordbname: str, file:File):
-    print(vectordbname, file.path)
+async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
+    print(vectordbname, file.filename)
     vectordbclass = classregistry.get(vectordbname)
     if vectordbclass:
         retrieved_instance = manager.get_module(vectordbname)
@@ -21,8 +21,7 @@ async def load(vectordbname: str, file:File):
             return {'content': "The vectordb you requested has already been loaded." }        
         else: 
             instance = vectordbclass(vectordbname)
-            print(file.path)
-            result = instance.load(file)
+            result = instance.load(file, collection)
             manager.register_module(instance)
             return result
     else:
@@ -38,14 +37,6 @@ async def query(vectordbname:str, query: Query):
     else:
         print("{vectordbname} not found....")
         return {'content': "{vectordbname}not found...." }
-
-@app.post("/milvusdb/load")
-async def load(file: File):
-    return mdb_interface.milvusdb_load(file)
-
-@app.post("/milvusdb/query")
-async def query(query: Query):
-    return mdb_interface.milvusdb_query(query) 
 
 @app.get("/milvusdb/problem/{id}")
 async def query(problem_id: str):

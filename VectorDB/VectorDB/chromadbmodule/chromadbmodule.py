@@ -17,27 +17,27 @@ class ChromadbModule:
     def some_method(self):
         pass
 
-    def load(self, file: File):
-        filename = os.path.basename(file.path)
+    def load(self, file: File, collection=None):
+        filename = file.filename
         fulltext = ""
 
-        with open(file.path, "rb") as f:
-            pdf = PdfReader(f)
+        # with open(file.file, "rb") as f:
+        pdf = PdfReader(file.file)
 
-            for page in pdf.pages:
-                text = page.extract_text()
-                chunks = [text[i:i+1000] for i in range(0, len(text), 900)]
-                pageNum = pdf.get_page_number(page)
-                fulltext += text
+        for page in pdf.pages:
+            text = page.extract_text()
+            chunks = [text[i:i+1000] for i in range(0, len(text), 900)]
+            pageNum = pdf.get_page_number(page)
+            fulltext += text
 
-                for i, chunk in enumerate(chunks):
-                    doc = Document(
-                        id=f"{filename}-p{pageNum}-{i}",
-                        text=chunk,
-                        metadata={"filename": filename, "page": pageNum}
-                    )
-                    print("Upserting: ", doc.id)
-                    db.upsert(doc)
+            for i, chunk in enumerate(chunks):
+                doc = Document(
+                    id=f"{filename}-p{pageNum}-{i}",
+                    text=chunk,
+                    metadata={"filename": filename, "page": pageNum}
+                )
+                print("Upserting: ", doc.id)
+                db.upsert(doc)
         
         return {
             "filename": filename,
@@ -55,13 +55,13 @@ class ChromadbModule:
 
 if __name__ == '__main__':
 
-    chromadb = ChromadbInterface("chromadb")
+    chromadb = ChromadbModule("chromadb")
     file = File(path="./File/sample.pdf")
     file.path = "./File/sample.pdf"
     chromadb.load(file)
 
-    query = Query(query="이 논문의 내용은 어떤 내용이에요?", top_k=1)
-    print(chromadb.query(query))
+    # query = Query(query="이 논문의 내용은 어떤 내용이에요?", top_k=1)
+    # print(chromadb.query(query))
 
 
 
