@@ -1,7 +1,11 @@
 from fastapi import UploadFile, Query
 from pydantic import BaseModel, Field
 from enum import Enum
+<<<<<<< HEAD
 from typing import Dict, Any, Optional, Literal
+=======
+from typing import Literal, Optional, Union
+>>>>>>> 227e3e2... fix: path to object upload & add collection parameter
 
 class VectorEnum(str, Enum):
     chromadb = "chromadb"
@@ -13,7 +17,10 @@ class CollectionEnum(Enum):
     grepp = "grepp"
     robotics = "robotics"
     suresoft = "suresoft"
+<<<<<<< HEAD
     humaneval = "humaneval"
+=======
+>>>>>>> 227e3e2... fix: path to object upload & add collection parameter
     solutions = "solutions"  
 
 class Metadata(BaseModel):
@@ -26,6 +33,7 @@ class Document(BaseModel):
     metadata: Metadata
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 =======
 >>>>>>> 36e8697... This is a version that adds function call functionality and resovling conflicts.
 '''
@@ -33,12 +41,16 @@ class File(UploadFile):
     path: str
 '''
 class File(BaseModel):
+=======
+class File(UploadFile):
+>>>>>>> 227e3e2... fix: path to object upload & add collection parameter
     path: str
     
 class Query(BaseModel):
     query: str
     top_k: int
 
+<<<<<<< HEAD
 class Data(BaseModel):
     data: Dict[str, Any]
 
@@ -66,3 +78,9 @@ class FieldSchema(BaseModel):
                 }
             ]
         }
+=======
+class Solution(BaseModel):
+    id: str | None = None
+    collection: str
+    problem_id: str
+>>>>>>> 227e3e2... fix: path to object upload & add collection parameter
