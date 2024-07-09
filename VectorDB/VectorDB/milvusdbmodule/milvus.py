@@ -1,4 +1,6 @@
 import os
+from tqdm import tqdm
+from openai import OpenAI
 from pymilvus import *
 
 DIMENSION = 1536
@@ -11,25 +13,81 @@ QUERY_PARAM = {
     "metric_type": "L2",
     "params": {"ef": 64},
 }
+EMBED_MODEL = 'text-embedding-ada-002'
+HOST = '127.0.0.1'
+PORT = 19530
 
 class Milvus:
-    def __init__(self, collection_name):
-        if not os.path.exists("./milvusdb"):
-            os.makedirs("./milvusdb")
-        self.client = MilvusClient(f"./milvusdb/milvus.db")
-        connections.connect("default", uri=f"./milvusdb/milvus.db")
-        if utility.has_collection(f'{collection_name}'):
-            self.collection = Collection(f"{collection_name}")
-        else:
-            fields = [
-                #...
-            ]
-            schema = CollectionSchema(fields=fields)
-            collection = Collection(name=f'{collection_name}', schema=schema)
-            collection.create_index(field_name="embedding", index_params=INDEX_PARAM)
-        
-        self.collection.load()
+    def __init__(self):
+        pass
     
+    def connect_collection(self, collection_name):
+        print(f"<Collection>:\n -------------\n <Host:Port> {HOST}:{PORT}")
+        connections.connect(host=HOST, port=PORT)
+        collection = Collection(f"{collection_name}")      # Get an existing collection.
+        collection.load()
+        return collection
+    
+    def create_collection(self, collection_name, fields, embed_field):
+        connections.connect(host=HOST, port=PORT)
+        print(f"<Collection>:\n -------------\n <Host:Port> {HOST}:{PORT}")
+        print(f' <Name>{collection_name}')
+        
+        if utility.has_collection(f'{collection_name}'):
+            utility.drop_collection(f'{collection_name}')
+        
+        schema = CollectionSchema(fields=fields, enable_dynamic_field=True)
+        collection = Collection(name=f'{collection_name}', schema=schema)
+        collection.create_index(field_name=f"{embed_field}", index_params=INDEX_PARAM)
+        collection.load()
+        print(collection)
+        return collection
+
     def method(self, ):
         print()
-        
+
+    def embed(self, text):
+        openAIclient = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY")
+        )
+        response = openAIclient.embeddings.create(
+            input=text,
+            model='text-embedding-3-small'
+        )
+        return response.data[0].embedding
+    
+    def ingest(self, collection, data):
+        collection.insert([{'description':element, 'embedding': self.embed(element)} for element in tqdm(data)])
+
+class DataProcess:
+    def __init__(self) -> None:
+        pass
+
+    def insert_grepp(self, json_data):
+        print(json_data)
+    
+    def insert_leetcode(self, json_data):
+        print(json_data)
+    
+    def insert_robotics(self, json_data):
+        robotics_fields = [
+            FieldSchema(name='id', dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
+        ]
+        milvus = Milvus()
+        collection = milvus.create_collection(collection_name='robotics', fields=robotics_fields, embed_field='embedding')
+        collection = milvus.connect_collection(collection_name='robotics')
+        array = []
+        for element in json_data:
+            array.append(element['content'])
+        print(f"===== Start Inserting data to '{collection.name}' ===== ")
+        milvus.ingest(collection=collection, data=array)
+        print(f"===== End Inserting data to '{collection.name}' ===== ")
+    
+    def insert_suresoft(self, json_data):
+        print(json_data)
+
+    def insert_solutions(self, json_data):
+        print(json_data)
+
