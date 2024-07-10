@@ -20,11 +20,14 @@ async def load(vectordbname: str, file:File):
 @app.post("/{vectordbname}/load1")
 async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
     print(vectordbname.value, file.filename)
+<<<<<<< HEAD
 
 
 
 async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
     print(vectordbname.value, file.filename)
+=======
+>>>>>>> 6f577d7... feat: add milvus query by collection api
     vectordbclass = classregistry.get(vectordbname.value)
     if vectordbclass:
         retrieved_instance = manager.get_module(vectordbname.value)

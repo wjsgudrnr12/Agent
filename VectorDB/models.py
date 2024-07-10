@@ -2,10 +2,13 @@ from fastapi import UploadFile, Query
 from pydantic import BaseModel, Field
 from enum import Enum
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Dict, Any, Optional, Literal
 =======
 from typing import Literal, Optional, Union
 >>>>>>> 227e3e2... fix: path to object upload & add collection parameter
+=======
+>>>>>>> 6f577d7... feat: add milvus query by collection api
 
 class VectorEnum(str, Enum):
     chromadb = "chromadb"
@@ -49,10 +52,13 @@ class File(UploadFile):
 class Query(BaseModel):
     query: str
     top_k: int
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 class Data(BaseModel):
     data: Dict[str, Any]
+=======
+>>>>>>> 6f577d7... feat: add milvus query by collection api
 
 class FieldSchema(BaseModel):
     name: str

@@ -1,3 +1,4 @@
+
 import os
 from PyPDF2 import PdfReader
 from fastapi import FastAPI
@@ -47,6 +48,7 @@ class MilvusdbModule:
         coll = self.milvus.connect_collection(collection.value)
         result = self.milvus.search(coll, query.query, query.top_k)
 
+
         return result
     
     def getProblem(self, query, collection) -> list[Document]:
@@ -60,4 +62,3 @@ class MilvusdbModule:
         result = self.milvus.drop(collection_name)
         
         return result
-    
