@@ -12,15 +12,15 @@ app = FastAPI()
 
 @app.post("/{vectordbname}/load")
 async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
-    print(vectordbname, file.filename)
-    vectordbclass = classregistry.get(vectordbname)
+    print(vectordbname.value, file.filename)
+    vectordbclass = classregistry.get(vectordbname.value)
     if vectordbclass:
-        retrieved_instance = manager.get_module(vectordbname)
+        retrieved_instance = manager.get_module(vectordbname.value)
         if retrieved_instance:
             print("The vectordb you requested has already been loaded.")
             return {'content': "The vectordb you requested has already been loaded." }        
         else: 
-            instance = vectordbclass(vectordbname)
+            instance = vectordbclass(vectordbname.value)
             result = instance.load(file, collection)
             manager.register_module(instance)
             return result
@@ -28,15 +28,23 @@ async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum =
         return {'content': "The vectordb you requested is not exist." }    
 
 @app.post("/{vectordbname}/query")
-async def query(vectordbname:str, query: Query):
-    print(vectordbname)
-    retrieved_instance = manager.get_module(vectordbname)
-    if retrieved_instance:
-        answer = retrieved_instance.query(query)
-        return {'content': answer }
+async def query(vectordbname:VectorEnum, query: Query, collection: CollectionEnum=None):
+    print(vectordbname.value)
+    vectordbclass = classregistry.get(vectordbname.value)
+    if vectordbclass:
+        instance = vectordbclass(vectordbname.value)
+        manager.register_module(instance)
+        retrieved_instance = manager.get_module(vectordbname.value)
+        if retrieved_instance:
+            answer = retrieved_instance.query(query, collection)
+            return {'content': answer }
+        else:
+            print(f"{vectordbname.value} not found....")
+            answer = retrieved_instance.query(query, collection)
+            return {'content': answer }
+            # return {'content': f"{vectordbname.value} not found...." }
     else:
-        print("{vectordbname} not found....")
-        return {'content': "{vectordbname}not found...." }
+        return {'content': "The vectordb you requested is not exist." }
 
 @app.get("/milvusdb/problem/{id}")
 async def query(problem_id: str):

@@ -2,7 +2,7 @@ import json
 from tqdm import tqdm
 from fastapi import FastAPI, HTTPException
 from VectorDB.milvusdbmodule.milvus import Milvus, DataProcess
-from models import Document, File
+from models import Document, File, Query
 from modulemanager import classregistry
 
 @classregistry.register('milvusdb', )
@@ -39,10 +39,10 @@ class MilvusdbModule:
             "filename": filename
         }
     
-    # def milvusdb_query(self, collection_name, query: Query) -> list[Document]:
-    #     collection = Milvus(f"{collection_name}")
-    #     result = collection.search(query.filename, query.query, query.top_k)
+    def query(self, query, collection) -> list[Document]:
+        print(collection.value)
+        coll = self.milvus.connect_collection(collection.value)
+        result = self.milvus.search(coll, query.query, query.top_k)
 
-    #     print(query.filename, query.query)
-    #     return result
+        return result
     

@@ -1,7 +1,6 @@
 from fastapi import UploadFile, Query
 from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Literal, Optional, Union
 
 class VectorEnum(str, Enum):
     chromadb = "chromadb"
@@ -28,10 +27,8 @@ class File(UploadFile):
     path: str
 
 class Query(BaseModel):
-    collection_name: str = Field(None, examples=["leetcode"], description= "select the specific DB collection")
-    filename: str = Field(None, example="\"filename\": \"sample.pdf\"", description="Select a specific file")
-    query: str = Field(None, description="query to vectordb")
-    top_k: int = Field(None, description="select top_k answers")
+    query: str
+    top_k: int
 
 class Solution(BaseModel):
     id: str | None = None

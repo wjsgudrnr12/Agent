@@ -46,7 +46,7 @@ class ChromadbModule:
         }
     
 #    def query(self, query: ChromdbQuery) -> list[Document]:
-    def query(self, query: Query) -> list[Document]:
+    def query(self, query, collection=None) -> list[Document]:
         result = db.query(query.query, query.top_k)
 
         print(result)

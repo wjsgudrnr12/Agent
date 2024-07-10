@@ -1,4 +1,4 @@
-import os
+import os, json
 from tqdm import tqdm
 from openai import OpenAI
 from pymilvus import *
@@ -30,7 +30,7 @@ class Milvus:
     
     def create_collection(self, collection_name, fields, embed_field):
         connections.connect(host=HOST, port=PORT)
-        print(f"<Collection>:\n -------------\n <Host:Port> {HOST}:{PORT}")
+        print(f"<Database>:\n -------------\n <Host:Port> {HOST}:{PORT}")
         print(f' <Name>{collection_name}')
         
         if utility.has_collection(f'{collection_name}'):
@@ -40,11 +40,7 @@ class Milvus:
         collection = Collection(name=f'{collection_name}', schema=schema)
         collection.create_index(field_name=f"{embed_field}", index_params=INDEX_PARAM)
         collection.load()
-        print(collection)
         return collection
-
-    def method(self, ):
-        print()
 
     def embed(self, text):
         openAIclient = OpenAI(
@@ -58,6 +54,43 @@ class Milvus:
     
     def ingest(self, collection, data):
         collection.insert([{'description':element, 'embedding': self.embed(element)} for element in tqdm(data)])
+    
+    def search(self, collection, query, top_k):
+        if collection.name == 'robotics':
+            output_fields = ["description"]
+        outputs = collection.search(
+            data=[self.embed(query)], 
+            anns_field='embedding', 
+            param=QUERY_PARAM,
+            limit=top_k,
+            output_fields = output_fields
+        )
+        print(outputs)
+        response = []
+        for output in outputs:
+            for record in output:
+                tmp = {
+                    "id": record.id,
+                    "distance": record.distance,
+                    "entity": {}
+                }
+                for field in output_fields:
+                    tmp["entity"].update({
+                        f"{field}": record.get(field)
+                    })
+                response.append(tmp)
+        result = {
+            "request": {
+                "collection": collection.name,
+                "anns_field": 'embedding',
+                "param": QUERY_PARAM,
+                "limit": top_k,
+            },
+            "response": sorted(response, key=lambda x: x['distance'])
+            # "response": json.dumps(outputs, indent=4)
+        }
+        return result
+
 
 class DataProcess:
     def __init__(self) -> None:
