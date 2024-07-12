@@ -32,6 +32,8 @@ class MilvusdbModule:
             self.dataProcess.insert_robotics(data)
         if collection.value == 'suresoft':
             self.dataProcess.insert_suresoft(data)
+        if collection.value == 'humaneval':
+            self.dataProcess.insert_humaneval(data)
         if collection.value == 'solutions':
             self.dataProcess.insert_solutions(data)
 
@@ -44,5 +46,17 @@ class MilvusdbModule:
         coll = self.milvus.connect_collection(collection.value)
         result = self.milvus.search(coll, query.query, query.top_k)
 
+        return result
+    
+    def getProblem(self, query, collection) -> list[Document]:
+        print(collection.value)
+        coll = self.milvus.connect_collection(collection.value)
+        result = self.milvus.search(coll, query.query, query.top_k)
+
+        return result
+    
+    def drop_collection(self, collection_name):
+        result = self.milvus.drop(collection_name)
+        
         return result
     

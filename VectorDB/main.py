@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, HTTPException
 
 from models import *
 from modulemanager import classregistry, manager
@@ -7,6 +7,8 @@ from modulemanager import classregistry, manager
 import VectorDB.customdbmodule.customdbmodule as customdbmodule
 import VectorDB.chromadbmodule.chromadbmodule as chromadbmodule
 import VectorDB.milvusdbmodule.milvusdbmodule as milvusdbmodule
+
+from typing import List
 
 app = FastAPI()
 
@@ -27,6 +29,17 @@ async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum =
     else:
         return {'content': "The vectordb you requested is not exist." }    
 
+# @app.post("/{vectordbname}/query")
+# async def query(vectordbname:str, query: Query):
+#     print(vectordbname)
+#     retrieved_instance = manager.get_module(vectordbname)
+#     if retrieved_instance:
+#         answer = retrieved_instance.query(query)
+#         return {'content': answer }
+#     else:
+#         print("{vectordbname} not found....")
+#         return {'content': "{vectordbname}not found...." }
+
 @app.post("/{vectordbname}/query")
 async def query(vectordbname:VectorEnum, query: Query, collection: CollectionEnum=None):
     print(vectordbname.value)
@@ -46,13 +59,42 @@ async def query(vectordbname:VectorEnum, query: Query, collection: CollectionEnu
     else:
         return {'content': "The vectordb you requested is not exist." }
 
-@app.get("/milvusdb/problem/{id}")
-async def query(problem_id: str):
-    return 
+@app.post("/milvus/collections", summary='Create Collection')
+async def query(collection_name: str, fieldSchema: List[FieldSchema]):
+    print(collection_name)
 
-@app.get("/milvusdb/solution/{id}")
-async def query(solution: Solution):
-    return 
+@app.delete("/milvus/collections/{collection_name}", summary='Delete Collection')
+async def query(collection_name: CollectionEnum):
+    print(collection_name.value)
+    retrieved_instance = manager.get_module('milvusdb')
+    if not retrieved_instance:
+        print(f'Milvus instance Not Found.')
+        raise HTTPException(status_code='404', detail=f'Milvus Not Found.')
+    result = retrieved_instance.drop_collection(collection_name.value)
+    if not result:
+        raise HTTPException(status_code='404', detail=f'{collection_name.value} Collection Not Found.')
+    return {'content': f'Success! {collection_name.value} Collection Dropped.'}
+
+@app.get("/milvus/collections/{collection_name}/data", summary='List Data')
+async def query(collection_name: CollectionEnum, offset: int=0, limit: int=5):
+    print(collection_name.value)
+
+@app.post("/milvus/collections/{collection_name}/data", summary='Create Data')
+async def query(collection_name: CollectionEnum, data: Data):
+    print(collection_name.value)
+
+@app.get("/milvus/collections/{collection_name}/data/{id}", summary='Get Data')
+async def query(collection_name: CollectionEnum, id: str):
+    print(collection_name.value)
+
+@app.put("/milvus/collections/{collection_name}/data/{id}", summary='Update Data')
+async def query(collection_name: CollectionEnum, id: str, data: Data):
+    print(collection_name.value)
+
+@app.delete("/milvus/collections/{collection_name}/data/{id}", summary='Delete Data')
+async def query(collection_name: CollectionEnum, id: str):
+    print(collection_name.value, id)
+        
 
 if __name__ == "__main__":
     import uvicorn
