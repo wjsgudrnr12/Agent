@@ -62,3 +62,17 @@ class MilvusdbModule:
         result = self.milvus.drop(collection_name)
         
         return result
+
+    
+    def getProblem(self, query, collection) -> list[Document]:
+        print(collection.value)
+        coll = self.milvus.connect_collection(collection.value)
+        result = self.milvus.search(coll, query.query, query.top_k)
+
+        return result
+    
+    def drop_collection(self, collection_name):
+        result = self.milvus.drop(collection_name)
+        
+        return result
+ 

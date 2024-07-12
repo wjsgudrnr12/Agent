@@ -3,12 +3,16 @@ from pydantic import BaseModel, Field
 from enum import Enum
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Dict, Any, Optional, Literal
 =======
 from typing import Literal, Optional, Union
 >>>>>>> 227e3e2... fix: path to object upload & add collection parameter
 =======
 >>>>>>> 6f577d7... feat: add milvus query by collection api
+=======
+from typing import Dict, Any, Optional, Literal
+>>>>>>> 75e7f2d... feat: add humanEval & milvus apis
 
 class VectorEnum(str, Enum):
     chromadb = "chromadb"
@@ -21,9 +25,13 @@ class CollectionEnum(Enum):
     robotics = "robotics"
     suresoft = "suresoft"
 <<<<<<< HEAD
+<<<<<<< HEAD
     humaneval = "humaneval"
 =======
 >>>>>>> 227e3e2... fix: path to object upload & add collection parameter
+=======
+    humaneval = "humaneval"
+>>>>>>> 75e7f2d... feat: add humanEval & milvus apis
     solutions = "solutions"  
 
 class Metadata(BaseModel):
@@ -60,6 +68,12 @@ class Data(BaseModel):
 =======
 >>>>>>> 6f577d7... feat: add milvus query by collection api
 
+<<<<<<< HEAD
+=======
+class Data(BaseModel):
+    data: Dict[str, Any]
+
+>>>>>>> 75e7f2d... feat: add humanEval & milvus apis
 class FieldSchema(BaseModel):
     name: str
     dtype: Literal["NONE", "BOOL", "INT8", "INT16", "INT32", "INT64", "FLOAT", "DOUBLE", "STRING", "VARCHAR", "ARRAY", "JSON", "BINARY_VECTOR", "FLOAT_VECTOR", "FLOAT16_VECTOR", "BFLOAT16_VECTOR", "SPARSE_FLOAT_VECTOR", "UNKNOWN"]
@@ -83,6 +97,7 @@ class FieldSchema(BaseModel):
                     "dim": "example_dim"
                 }
             ]
+<<<<<<< HEAD
         }
 =======
 class Solution(BaseModel):
@@ -90,3 +105,6 @@ class Solution(BaseModel):
     collection: str
     problem_id: str
 >>>>>>> 227e3e2... fix: path to object upload & add collection parameter
+=======
+        }
+>>>>>>> 75e7f2d... feat: add humanEval & milvus apis
