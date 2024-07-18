@@ -1,7 +1,8 @@
-import os, json
+import os, json, uuid
 from tqdm import tqdm
 from openai import OpenAI
 from pymilvus import *
+from fastapi import HTTPException
 
 DIMENSION = 1536
 INDEX_PARAM = {
@@ -20,12 +21,19 @@ PORT = 19530
 
 class Milvus:
     def __init__(self):
+        self.leeetcode_fields = ["id", "title", "topic", "languages", "level", "description", "examples", "constraints", "testcases", "code_template"]
+        self.robotics_fields = ["description"]
+        self.humaneval_fields = ["id", "prompt", "entry_point", "canonical_solution", "test"]
+        self.suresoft__fields = ["id", "TpTitle", "TpName", "ruleTitle", "ruleName", "ruleDescription", "example_name", "example_code", "checker_header_name", "checker_header_code", "checker_implementation_name", "checker_implementation_code"]
         pass
     
     def connect_collection(self, collection_name):
         print(f"<Collection>:\n -------------\n <Host:Port> {HOST}:{PORT}")
         connections.connect(host=HOST, port=PORT)
-        collection = Collection(f"{collection_name}")      # Get an existing collection.
+        try:
+            collection = Collection(f"{collection_name}")      # Get an existing collection.
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e)
         collection.load()
         return collection
     
@@ -77,42 +85,36 @@ class Milvus:
         collection.delete(f'id == {id}')
     
     def scalar_query(self, collection, expr, limit=1):
-        print(expr)
         output_fields = None
         if collection.name == 'leetcode':
-            output_fields = ["id", "title", "topic", "lanuages", "level", "description", "examples", "constraints", "testcases", "code_template"]
+            output_fields = self.leeetcode_fields
         if collection.name == 'robotics':
-            output_fields = ["id", "description"]
+            output_fields = self.robotics_fields
         if collection.name == 'humaneval':
-            output_fields = ["id", "task_id", "prompt", "entry_point", "canonical_solution", "test"]
-        # if limit == None:
-        #     count = collection.query(
-        #         expr= expr,
-        #         output_fields=["count(*)"]
-        #     )
-        #     result = collection.query(
-        #         expr= expr,
-        #         output_fields= output_fields,
-        #         limit=count[0]["count(*)"]
-        #     )
-        # else:
+            output_fields = self.humaneval_fields
+        if collection.name == 'suresoft':
+            output_fields = self.suresoft__fields
+
         result = collection.query(
             expr= expr,
             output_fields= output_fields,
             limit = limit
         )
         
-        return sorted(result, key=lambda x: x['id'])
+        return result
     
     def search(self, collection, query, top_k):
         anns_field = 'embedding'
         output_fields = None
         if collection.name == 'leetcode':
-            output_fields = ["id", "title", "topic", "languages", "level", "description", "examples", "constraints", "testcases", "code_template"]
+            output_fields = self.leeetcode_fields
         if collection.name == 'robotics':
-            output_fields = ["description"]
+            output_fields = self.robotics_fields
         if collection.name == 'humaneval':
-            output_fields = ["id", "prompt", "entry_point", "canonical_solution", "test"]
+            output_fields = self.humaneval_fields
+        if collection.name == 'suresoft':
+            output_fields = self.suresoft__fields
+
         outputs = collection.search(
             data=[self.embed(query)], 
             anns_field=anns_field, 
@@ -128,10 +130,11 @@ class Milvus:
                     "distance": record.distance,
                     "entity": {}
                 }
-                for field in output_fields:
-                    tmp["entity"].update({
-                        f"{field}": record.get(field)
-                    })
+                if output_fields != None:
+                    for field in output_fields:
+                        tmp["entity"].update({
+                            f"{field}": record.get(field)
+                        })
                 response.append(tmp)
         for item in response:
             for key in item['entity']:
@@ -242,7 +245,60 @@ class DataProcess:
         print(f"===== End Inserting data to '{collection.name}' ===== ")
     
     def insert_suresoft(self, json_data):
-        print(json_data)
+        suresoft_fields = [
+            FieldSchema(name='id', dtype=DataType.VARCHAR, max_length=64, is_primary=True),
+            FieldSchema(name='TpTitle', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='TpName', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='ruleTitle', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='ruleName', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='ruleDescription', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='example_name', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='example_code', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='checker_header_name', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='checker_header_code', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='checker_implementation_name', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='checker_implementation_code', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='embedding', 
+                        dtype=DataType.FLOAT_VECTOR, 
+                        dim=DIMENSION, 
+                        description="TpTitle + TpName + ruleTitle + ruleName + ruleDescription + example_code + checker_header_code + checker_implementation_code"),
+        ]
+        milvus = Milvus()
+        collection = milvus.create_collection(collection_name='suresoft', fields=suresoft_fields, embed_field='embedding')
+        collection = milvus.connect_collection(collection_name='suresoft')
+        
+        print(f"------------- Start to '{collection.name}' ------------- ")
+        for element in tqdm(json_data):
+            data = [{
+                'id': element['id'],
+                'TpTitle': element['TpTitle'],
+                'TpName': element['TpName'],
+                'ruleTitle': element['ruleTitle'],
+                'ruleName': element['ruleName'],
+                'ruleDescription': element['ruleDescription'],
+                'example_name': element['example']['name'],
+                'example_code': element['example']['code'],
+                'checker_header_name': element['checker_header']['name'],
+                'checker_header_code': element['checker_header']['code'],
+                'checker_implementation_name': element['checker_implementation']['name'],
+                'checker_implementation_code': element['checker_implementation']['code'],
+                'embedding': milvus.embed(
+                    element['TpTitle'] +\
+                    element['TpName'] +\
+                    element['ruleTitle'] +\
+                    element['ruleName'] +\
+                    element['ruleDescription'] +\
+                    element['example']['code'] +\
+                    element['checker_header']['code'] +\
+                    element['checker_implementation']['code']
+                )
+            }]
+            print(f"------------- Upserting {element['id']} -------------")
+            try:
+                milvus.upsert(collection = collection, data = data)
+            except Exception as e:
+                print(e)
+        print(f"------------- End to '{collection.name}' -------------")
 
     def insert_humaneval(self, json_data):
         humaneval_fields = [
@@ -274,5 +330,32 @@ class DataProcess:
         print(f"------------- End to '{collection.name}' -------------")
 
     def insert_solutions(self, json_data):
-        print(json_data)
+        solution_fields = [
+            FieldSchema(name='id', dtype=DataType.VARCHAR, max_length=640, is_primary=True),
+            FieldSchema(name='source', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='solution_id', dtype=DataType.INT64),
+            FieldSchema(name='problem_id', dtype=DataType.INT64),
+            FieldSchema(name='language', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='code', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION, description="language & code"),
+        ]
+        milvus = Milvus()
+        collection = milvus.create_collection(collection_name='solution', fields=solution_fields, embed_field='embedding')
+        collection = milvus.connect_collection(collection_name='solution')
+        
+        print(f"------------- Start to '{collection.name}' ------------- ")
+        for element in tqdm(json_data):
+            id = f"{element['source']}-{element['solution_id']}-{element['problem_id']}"
+            data = [{
+                'id': id,
+                'source': element['source'],
+                'solution_id': element['solution_id'],
+                'problem_id': element['problem_id'],
+                'language': element['language'],
+                'code': element['code'],
+                'embedding': milvus.embed(element['language']+element['code'])
+            }]
+            print(f"------------- Upserting {id} -------------")
+            milvus.upsert(collection = collection, data = data)
+        print(f"------------- End to '{collection.name}' -------------")
 

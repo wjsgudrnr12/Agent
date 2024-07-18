@@ -11,6 +11,7 @@ class MilvusdbModule:
         self.name = name
         self.milvus = Milvus()
         self.dataProcess = DataProcess()
+        self.suresoft_embed_fields = ["TpTitle", "TpName", "ruleTitle", "ruleName", "ruleDescription", "example_code", "checker_header_code", "checker_implementation_code"]
         pass
 
     def some_method(self):
@@ -50,38 +51,59 @@ class MilvusdbModule:
     
     def get_data(self, collection_name, id):
         coll = self.milvus.connect_collection(collection_name)
-        expr = f"id == {id}"
-        
+        if collection_name == 'suresoft':
+            expr = f"id == '{id}'"
+        else:
+            expr = f"id == {id}"
+
         result = self.milvus.scalar_query(collection=coll, expr=expr)
         return result
 
-    def update_data(self, collection_name, id, data):
-        collection = self.milvus.connect_collection(collection_name)
-        expr = f"id == {id}"
-        
-        result = self.milvus.scalar_query(collection=collection, expr=expr)
-        if len(result) == 0:
-            raise HTTPException(status_code=404, detail=f'id:{id} Not Found.')
-        try:
-            print(result)
-            self.milvus.upsert(collection=collection, data=data)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
-        return result
-    
     def create_data(self, collection_name, data):
         collection = self.milvus.connect_collection(collection_name)
-        expr = f"id == {data.id}"
+        if collection_name == 'suresoft':
+            expr = f'id == "{data["id"]}"'
+        else:
+            expr = f'id == {data["id"]}'
         
-        result = self.milvus.scalar_query(collection=collection, expr=expr)
-        if not len(result) == 0:
-            raise HTTPException(status_code=404, detail=f'id:{id} Found.')
+        found = self.milvus.scalar_query(collection=collection, expr=expr)
+        if found:
+            raise HTTPException(status_code=409, detail=f'{found["id"]} Already Exists.')
         try:
-            print(result)
+            if collection_name == 'suresoft':
+                data['embedding'] = self.milvus.embed(
+                    "".join(data[key] for key in self.suresoft_embed_fields if key in data)
+                )
             self.milvus.ingest(collection=collection, data=data)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
-        return result
+        return {"id": data["id"]}
+
+    def update_data(self, collection_name, id, data):
+        try:
+            collection = self.milvus.connect_collection(collection_name)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e)
+        if collection_name == 'suresoft':
+            expr = f"id == '{id}'"
+        else:
+            expr = f"id == {id}"
+        
+        found = self.milvus.scalar_query(collection=collection, expr=expr)
+        if len(found) == 0:
+            raise HTTPException(status_code=404, detail=f'id:{id} Not Found.')
+        try:
+            for key in data:
+                if key in found[0]:
+                    found[0][key] = data[key]
+            if collection_name == 'suresoft':
+                found[0]['embedding'] = self.milvus.embed(
+                    "".join(found[key] for key in self.suresoft_embed_fields if key in found)
+                )
+            self.milvus.upsert(collection=collection, data=found)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=e)
+        return {"result": f"id:{id} Updated."}   
 
     def delete_data(self, collection_name, id):
         collection = self.milvus.connect_collection(collection_name)
