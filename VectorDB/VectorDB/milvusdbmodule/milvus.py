@@ -15,6 +15,7 @@ QUERY_PARAM = {
 }
 EMBED_MODEL = 'text-embedding-ada-002'
 HOST = '127.0.0.1'
+# HOST = '129.254.177.85'
 PORT = 19530
 
 class Milvus:
@@ -72,25 +73,46 @@ class Milvus:
         collection.insert(data)
     def upsert(self, collection, data):
         collection.upsert(data)
+    def delete(self, collection, id):
+        collection.delete(f'id == {id}')
     
-    def scalar_query(self, collection, expr):
+    def scalar_query(self, collection, expr, limit=1):
+        print(expr)
+        output_fields = None
+        if collection.name == 'leetcode':
+            output_fields = ["id", "title", "topic", "lanuages", "level", "description", "examples", "constraints", "testcases", "code_template"]
         if collection.name == 'robotics':
-            output_fields = ["description"]
+            output_fields = ["id", "description"]
         if collection.name == 'humaneval':
-            output_fields = ["task_id", "prompt", "entry_point", "canonical_solution", "test"]
+            output_fields = ["id", "task_id", "prompt", "entry_point", "canonical_solution", "test"]
+        # if limit == None:
+        #     count = collection.query(
+        #         expr= expr,
+        #         output_fields=["count(*)"]
+        #     )
+        #     result = collection.query(
+        #         expr= expr,
+        #         output_fields= output_fields,
+        #         limit=count[0]["count(*)"]
+        #     )
+        # else:
         result = collection.query(
             expr= expr,
-            output_fields= output_fields
+            output_fields= output_fields,
+            limit = limit
         )
-        return result
+        
+        return sorted(result, key=lambda x: x['id'])
     
     def search(self, collection, query, top_k):
+        anns_field = 'embedding'
+        output_fields = None
+        if collection.name == 'leetcode':
+            output_fields = ["id", "title", "topic", "languages", "level", "description", "examples", "constraints", "testcases", "code_template"]
         if collection.name == 'robotics':
-            anns_field = 'embedding'
             output_fields = ["description"]
         if collection.name == 'humaneval':
-            anns_field = 'embedding'
-            output_fields = ["task_id", "prompt", "entry_point", "canonical_solution", "test"]
+            output_fields = ["id", "prompt", "entry_point", "canonical_solution", "test"]
         outputs = collection.search(
             data=[self.embed(query)], 
             anns_field=anns_field, 
@@ -98,7 +120,6 @@ class Milvus:
             limit=top_k,
             output_fields = output_fields
         )
-        print(outputs)
         response = []
         for output in outputs:
             for record in output:
@@ -112,16 +133,14 @@ class Milvus:
                         f"{field}": record.get(field)
                     })
                 response.append(tmp)
-        result = {
-            "request": {
-                "collection": collection.name,
-                "anns_field": anns_field,
-                "param": QUERY_PARAM,
-                "limit": top_k,
-            },
-            "response": sorted(response, key=lambda x: x['distance'])
-            # "response": json.dumps(outputs, indent=4)
-        }
+        for item in response:
+            for key in item['entity']:
+                value = item['entity'][key]
+                if type(value).__name__ == 'RepeatedScalarContainer':
+                    item['entity'][key] = list(value)
+            
+        result = sorted(response, key=lambda x: x['distance'])
+        print(outputs)
         return result
 
 
@@ -130,10 +149,79 @@ class DataProcess:
         pass
 
     def insert_grepp(self, json_data):
-        print(json_data)
+        grepp_fields = [
+            FieldSchema(name='id', dtype=DataType.INT64, is_primary=True),
+            FieldSchema(name='title', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='partTitle', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='languages', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_capacity=900, max_length=1000),
+            FieldSchema(name='level', dtype=DataType.INT16),
+            FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='testcases', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
+        ]
+        milvus = Milvus()
+        collection = milvus.create_collection(collection_name='grepp', fields=grepp_fields, embed_field='embedding')
+        collection = milvus.connect_collection(collection_name='grepp')
+        print(f"===== Start Inserting data to '{collection.name}' ===== ")
+        for element in tqdm(json_data):
+            data = [{
+                'id': element['id'],
+                'title': element['title'],
+                'partTitle': element['partTitle'],
+                'languages': element['languages'],
+                'level': element['level'],
+                'description': element['description'], 
+                'testcases': str(element['testcases']),
+                'embedding': milvus.embed(
+                    element['title'] + element['partTitle'] + element['description'] + str(element['testcases'])
+                )
+            }]
+            print(f"------------- Upserting {element['id']} -------------")
+            milvus.upsert(collection=collection, data=data)
+
+        print(f"===== End Inserting data to '{collection.name}' ===== ")
     
     def insert_leetcode(self, json_data):
-        print(json_data)
+        leetcode_fields = [
+            FieldSchema(name='id', dtype=DataType.INT64, is_primary=True),
+            FieldSchema(name='title', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='topic', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_capacity=900, max_length=1000),
+            FieldSchema(name='languages', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_capacity=900, max_length=1000),
+            FieldSchema(name='level', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='examples', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='constraints', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='testcases', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='code_template', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
+        ]
+        milvus = Milvus()
+        collection = milvus.create_collection(collection_name='leetcode', fields=leetcode_fields, embed_field='embedding')
+        collection = milvus.connect_collection(collection_name='leetcode')
+        print(f"===== Start Inserting data to '{collection.name}' ===== ")
+        for element in tqdm(json_data):
+            topics_sum = ''
+            for topic in element['topic']:
+                topics_sum = topics_sum + topic
+            data = [{
+                'id': element['problem_id'],
+                'title': element['title'],
+                'topic': element['topic'],
+                'languages': element['languages'],
+                'level': element['level'],
+                'description': element['description'], 
+                'examples': element['examples'],
+                'constraints': element['constraints'],
+                'testcases': element['testcases'],
+                'code_template': element['code_template'],
+                'embedding': milvus.embed(
+                    element['title'] + topics_sum + element['description'] + element['examples'] + element['constraints'] + element['code_template']
+                )
+            }]
+            print(f"------------- Upserting {element['problem_id']} -------------")
+            milvus.upsert(collection=collection, data=data)
+
+        print(f"===== End Inserting data to '{collection.name}' ===== ")
     
     def insert_robotics(self, json_data):
         robotics_fields = [
@@ -158,20 +246,22 @@ class DataProcess:
 
     def insert_humaneval(self, json_data):
         humaneval_fields = [
-            FieldSchema(name='task_id', dtype=DataType.VARCHAR, max_length=64000, is_primary=True, auto_id=False),
+            FieldSchema(name='id', dtype=DataType.INT64, is_primary=True),
+            FieldSchema(name='task_id', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='prompt', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='entry_point', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='canonical_solution', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='test', dtype=DataType.VARCHAR, max_length=64000),
-            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
+            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION, description="prompt & canonical_solution"),
         ]
         milvus = Milvus()
-        collection = milvus.create_collection(collection_name='humaneval', fields=humaneval_fields, embed_field=['prompt_embedding', 'solution_embedding', 'prompt_solution_embedding'])
+        collection = milvus.create_collection(collection_name='humaneval', fields=humaneval_fields, embed_field='embedding')
         collection = milvus.connect_collection(collection_name='humaneval')
         
         print(f"------------- Start to '{collection.name}' ------------- ")
         for element in tqdm(json_data):
             data = [{
+                'id': int(element['task_id'].split('/')[1]),
                 'task_id':element['task_id'],
                 'prompt':element['prompt'],
                 'entry_point':element['entry_point'],
