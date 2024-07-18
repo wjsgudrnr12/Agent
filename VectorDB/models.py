@@ -24,14 +24,17 @@ class Document(BaseModel):
     id: str
     text: str
     metadata: Metadata
+<<<<<<< HEAD
 
+=======
+>>>>>>> 36e8697... This is a version that adds function call functionality and resovling conflicts.
 '''
 class File(UploadFile):
     path: str
 '''
 class File(BaseModel):
     path: str
-
+    
 class Query(BaseModel):
     query: str
     top_k: int

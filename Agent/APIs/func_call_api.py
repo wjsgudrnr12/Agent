@@ -8,6 +8,8 @@ from Processing.process_prompt import *
 from Processing.messages import *
 from Processing.process_request import *
 from fastapi import FastAPI
+from dotenv import load_dotenv
+import os
 
 from dotenv import load_dotenv
 import os
@@ -36,7 +38,6 @@ def gpt_func_call(messages, temperature=0, max_tokens=1024):
         {
             "name": "common_query_module",
             "description": "React가 뭐야?",
-
             "parameters": {
                 "type": "object",
                 "properties": {
