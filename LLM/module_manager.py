@@ -1,3 +1,5 @@
+from models import *
+
 class ClassRegistry:
     def __init__(self):
         self._registry = {}
@@ -75,3 +77,31 @@ class MainManager:
         else:
             print(f"Manager '{name}' not found.")
             return None
+        
+
+def llm_load(modelname:str) -> Answer:
+    print(modelname)
+    llmclass = classregistry.get(modelname)
+    if llmclass:        
+        retrieved_instance = manager.get_module(modelname)
+        if retrieved_instance is not None:
+            print("The model you requested has already been loaded.")
+            return {'content': "The model you requested has already been loaded." }        
+        
+        else:    
+            instance = llmclass(modelname)
+            instance.init()
+            manager.register_module(instance)
+            #answer = instance.gen("1980년대에 첫 번째 혁신적인 기술을 보셨다고 하셨는데, 어떤 기술이었나요?")
+            return {'content': "model load ok" }
+        
+def llm_query(modelname:str, prompt: Prompt) -> Answer:
+    print(modelname)
+    retrieved_instance = manager.get_module(modelname)
+    if retrieved_instance:
+        answer = retrieved_instance.gen(prompt.content)
+        return {'content': answer }
+    else:
+        print("not found....")
+        return {'content': "not found...." }
+

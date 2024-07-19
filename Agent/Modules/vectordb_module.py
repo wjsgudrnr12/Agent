@@ -1,8 +1,8 @@
 import requests
 from fastapi import HTTPException
-from modulemanager import Module
-from modulemanager import classregistry
-from Processing.processrequest import *
+from Modules.module_manager import Module
+from Modules.module_manager import classregistry
+from Processing.process_request import *
 
 @classregistry.register('ETRI_vectordb', )
 class VectorDBModule():

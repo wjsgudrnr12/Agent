@@ -4,7 +4,7 @@ from peft import PeftModel, PeftConfig
 from transformers.generation import GenerationConfig
 
 from models import *
-from modulemanager import classregistry
+from module_manager import classregistry
 
 @classregistry.register('koalpaca_12_8', )
 class Koalpach_12_8_LLMModel:
@@ -16,7 +16,7 @@ class Koalpach_12_8_LLMModel:
 
     #    self.modelinit()
 
-    def modelinit(self): 
+    def init(self): 
         print("model initializing....")   
         peft_model_id = "hyungkook/koalpaca-polyglot-12.8b-jun"
 

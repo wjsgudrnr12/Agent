@@ -1,3 +1,5 @@
+from models import *
+
 class ClassRegistry:
     def __init__(self):
         self._registry = {}
@@ -75,3 +77,30 @@ class MainManager:
         else:
             print(f"Manager '{name}' not found.")
             return None
+        
+def vectordb_load(vectordbname, file):
+    print(vectordbname, file.path)
+    vectordbclass = classregistry.get(vectordbname)
+    if vectordbclass:
+        retrieved_instance = manager.get_module(vectordbname)
+        if retrieved_instance:
+            print("The vectordb you requested has already been loaded.")
+            return {'content': "The vectordb you requested has already been loaded." }        
+        else: 
+            instance = vectordbclass(vectordbname)
+            print(file.path)
+            result = instance.load(file)
+            manager.register_module(instance)
+            return result
+    else:
+        return {'content': "The vectordb you requested is not exist." }    
+    
+def vectordb_query(vectordbname, query):
+    print(vectordbname)
+    retrieved_instance = manager.get_module(vectordbname)
+    if retrieved_instance:
+        answer = retrieved_instance.query(query)
+        return {'content': answer }
+    else:
+        print("{vectordbname} not found....")
+        return {'content': "{vectordbname}not found...." }

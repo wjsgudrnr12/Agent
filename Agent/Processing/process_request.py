@@ -1,10 +1,10 @@
 import requests
 import json
-from models import *
+from Processing.models import *
 
  # vectordb -> http://127.0.0.1:8000/ETRI/vectordb/customdb/query   
  # llm ->http://127.0.0.1:8000/ETRI/llm/koalpaca_12_8/query
-async def common_query_logic(mainmanager, organization: str, modulekind: str, modulename: str, query: Query):
+async def common_query_module(mainmanager, organization: str, modulekind: str, modulename: str, query: Query):
     manager = mainmanager.get_manager(modulekind)
     if manager:
         module_name = f"{organization}_{modulekind}"
@@ -15,8 +15,8 @@ async def common_query_logic(mainmanager, organization: str, modulekind: str, mo
             decoded_dict = json.loads(decoded_content)
             return decoded_dict
         else:
-            print("'content': 'The vectordb you requested does not exist.'")
-            return {'content': "The vectordb you requested does not exist."}
+            print("'content': 'The module you requested does not exist.'")
+            return {'content': "The module you requested does not exist."}
         
 
 def requesthandler(targeturi, payload=None):
