@@ -1,18 +1,7 @@
 from fastapi import UploadFile, Query
 from pydantic import BaseModel, Field
 from enum import Enum
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 from typing import Dict, Any, Optional, Literal
-=======
-from typing import Literal, Optional, Union
->>>>>>> 227e3e2... fix: path to object upload & add collection parameter
-=======
->>>>>>> 6f577d7... feat: add milvus query by collection api
-=======
-from typing import Dict, Any, Optional, Literal
->>>>>>> 75e7f2d... feat: add humanEval & milvus apis
 
 class VectorEnum(str, Enum):
     chromadb = "chromadb"
@@ -24,14 +13,7 @@ class CollectionEnum(Enum):
     grepp = "grepp"
     robotics = "robotics"
     suresoft = "suresoft"
-<<<<<<< HEAD
-<<<<<<< HEAD
     humaneval = "humaneval"
-=======
->>>>>>> 227e3e2... fix: path to object upload & add collection parameter
-=======
-    humaneval = "humaneval"
->>>>>>> 75e7f2d... feat: add humanEval & milvus apis
     solutions = "solutions"  
 
 class Metadata(BaseModel):
@@ -42,38 +24,22 @@ class Document(BaseModel):
     id: str
     text: str
     metadata: Metadata
-<<<<<<< HEAD
 
-<<<<<<< HEAD
-=======
->>>>>>> 36e8697... This is a version that adds function call functionality and resovling conflicts.
 '''
 class File(UploadFile):
     path: str
 '''
+
 class File(BaseModel):
-=======
-class File(UploadFile):
->>>>>>> 227e3e2... fix: path to object upload & add collection parameter
     path: str
     
 class Query(BaseModel):
     query: str
     top_k: int
-<<<<<<< HEAD
 
-<<<<<<< HEAD
-class Data(BaseModel):
-    data: Dict[str, Any]
-=======
->>>>>>> 6f577d7... feat: add milvus query by collection api
-
-<<<<<<< HEAD
-=======
 class Data(BaseModel):
     data: Dict[str, Any]
 
->>>>>>> 75e7f2d... feat: add humanEval & milvus apis
 class FieldSchema(BaseModel):
     name: str
     dtype: Literal["NONE", "BOOL", "INT8", "INT16", "INT32", "INT64", "FLOAT", "DOUBLE", "STRING", "VARCHAR", "ARRAY", "JSON", "BINARY_VECTOR", "FLOAT_VECTOR", "FLOAT16_VECTOR", "BFLOAT16_VECTOR", "SPARSE_FLOAT_VECTOR", "UNKNOWN"]
@@ -97,14 +63,6 @@ class FieldSchema(BaseModel):
                     "dim": "example_dim"
                 }
             ]
-<<<<<<< HEAD
         }
-=======
-class Solution(BaseModel):
-    id: str | None = None
-    collection: str
-    problem_id: str
->>>>>>> 227e3e2... fix: path to object upload & add collection parameter
-=======
-        }
->>>>>>> 75e7f2d... feat: add humanEval & milvus apis
+
+        
