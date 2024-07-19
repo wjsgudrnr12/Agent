@@ -1,5 +1,5 @@
 import argparse
-from modulemanager import Manager
+from Modules.module_manager import Manager
 
 
 def argparse_argument():
@@ -13,7 +13,7 @@ def argparse_argument():
                               '-vectordb', 'KIST_vectordb', '127.0.0.1', '10001', 'test1db:aaa.csv,test2db:bbb.csv',
                               '-llm', 'ETRI_llm', '127.0.0.1', '8002', 'koalpaca_12_8',
                               '-llm', 'KIST_llm', '127.0.0.1', '10002', 'koalpaca_12_8'])
-    
+                                  
     return args
 
 

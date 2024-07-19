@@ -5,8 +5,7 @@ from openai import OpenAI
 import numpy as np
 from pprint import pprint
 from models import *
-from modulemanager import Module
-from modulemanager import classregistry
+from module_manager import classregistry
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,7 +20,7 @@ class CustomdbModule2():
         self.name = name
         self.faq_db = []
 
-    def load(self, file):
+    def load(self, file, collection=None):
         with open(file.path, 'r', encoding='utf-8') as fp:
             cr = csv.reader(fp)
             next(cr)

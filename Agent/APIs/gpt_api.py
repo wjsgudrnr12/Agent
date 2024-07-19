@@ -12,7 +12,7 @@ def gpt_4_submit(instruction):
     messages = [
             {"role": "user", "content": f"{instruction}"},
         ]
-    print("creating code........")    
+    print("generating code........")    
     response = openAIclient.chat.completions.create(    
         model="gpt-4-turbo",
         temperature=0,

@@ -1,3 +1,12 @@
+func_call_prompt = '''
+‘’’
+{}
+‘’’
+'''
+
+
+
+
 module_gen_prompt = '''
 Write the code based on the given natural language specification, predefined tasks and module information.
 
@@ -274,6 +283,21 @@ Requirements:
     - Write it in consideration of the Problem tag.
     - All scenarios are described based on what is presented in the problem information.
     - Write only 5 scenarios for technical or algorithms elements that should be considered most important when generating code using LLM.
+'''
+
+
+
+example_query_context_prompt = '''
+{}
+
+Descrpition
+‘’’
+{}
+‘’’
+
+Requirement
+    - Generate only class.
+    - The generated code from prompt should have no type hints.
 '''
 
 

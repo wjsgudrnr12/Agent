@@ -11,5 +11,6 @@ __pycache__
 
 # database
 chromadb
+volumes
 
 111*
