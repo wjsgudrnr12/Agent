@@ -10,7 +10,6 @@ __pycache__
 .env*.local
 
 # database
-chromadb
 volumes
 
 111*

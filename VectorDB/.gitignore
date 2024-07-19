@@ -10,6 +10,5 @@ __pycache__
 .env*.local
 
 # database
-chromadb
 
 111*
