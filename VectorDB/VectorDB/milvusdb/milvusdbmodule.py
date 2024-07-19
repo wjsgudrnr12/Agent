@@ -1,4 +1,3 @@
-
 import os
 from PyPDF2 import PdfReader
 from fastapi import FastAPI
@@ -47,7 +46,6 @@ class MilvusdbModule:
         print(collection.value)
         coll = self.milvus.connect_collection(collection.value)
         result = self.milvus.search(coll, query.query, query.top_k)
-
 
         return result
     

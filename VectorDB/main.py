@@ -8,8 +8,11 @@ import VectorDB.chromadb.chromadbmodule as chromadbmodule
 import VectorDB.milvusdb.milvusdbmodule as milvusdbmodule
 
 from typing import List
+<<<<<<< HEAD
 
 from typing import List
+=======
+>>>>>>> 24648315959a79fd712813c7210a6e96e066f464
 
 app = FastAPI()
 
@@ -22,6 +25,14 @@ async def load(vectordbname: str, file:File):
 @app.post("/{vectordbname}/load1")
 async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
     print(vectordbname.value, file.filename)
+<<<<<<< HEAD
+=======
+
+
+
+async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum = None):
+    print(vectordbname.value, file.filename)
+>>>>>>> 24648315959a79fd712813c7210a6e96e066f464
     vectordbclass = classregistry.get(vectordbname.value)
     if vectordbclass:
         retrieved_instance = manager.get_module(vectordbname.value)
@@ -59,6 +70,7 @@ async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum =
 #     else:
 #         print("{vectordbname} not found....")
 #         return {'content': "{vectordbname}not found...." }
+<<<<<<< HEAD
 
 # @app.post("/{vectordbname}/query")
 # async def query(vectordbname:str, query: Query):
@@ -70,6 +82,8 @@ async def load(file:File, vectordbname: VectorEnum, collection: CollectionEnum =
 #     else:
 #         print("{vectordbname} not found....")
 #         return {'content': "{vectordbname}not found...." }
+=======
+>>>>>>> 24648315959a79fd712813c7210a6e96e066f464
 
 @app.post("/{vectordbname}/query")
 async def query(vectordbname:str, query: Query):
@@ -118,6 +132,7 @@ async def query(collection_name: CollectionEnum):
 @app.get("/milvus/collections/{collection_name}/data", summary='List Data')
 async def query(collection_name: CollectionEnum, offset: int=0, limit: int=5):
     print(collection_name.value)
+<<<<<<< HEAD
 
 @app.post("/milvus/collections/{collection_name}/data", summary='Create Data')
 async def query(collection_name: CollectionEnum, data: Data):
@@ -156,6 +171,16 @@ async def query(collection_name: CollectionEnum, data: Data):
 async def query(collection_name: CollectionEnum, id: str):
     print(collection_name.value)
 
+=======
+
+@app.post("/milvus/collections/{collection_name}/data", summary='Create Data')
+async def query(collection_name: CollectionEnum, data: Data):
+    print(collection_name.value)
+
+@app.get("/milvus/collections/{collection_name}/data/{id}", summary='Get Data')
+async def query(collection_name: CollectionEnum, id: str):
+    print(collection_name.value)
+>>>>>>> 24648315959a79fd712813c7210a6e96e066f464
 
 @app.put("/milvus/collections/{collection_name}/data/{id}", summary='Update Data')
 async def query(collection_name: CollectionEnum, id: str, data: Data):
